@@ -1,163 +1,129 @@
+# smart_accounting_ui.py
+import streamlit as st
+import pandas as pd
+from datetime import date
 
-Enter "help" below or click "Help" above for more information.
->>> import tkinter as tk
-... from tkinter import ttk, messagebox, filedialog
-... import pandas as pd
-... import matplotlib.pyplot as plt
-... from datetime import datetime
-... 
-... class SmartAccountingSystem:
-...     def __init__(self, root):
-...         self.root = root
-...         self.root.title("النظام المحاسبي الذكي")
-...         self.root.geometry("1200x700")
-...         
-...         # بيانات أولية
-...         self.data = {
-...             "المبيعات": pd.DataFrame(columns=["التاريخ", "العميل", "المبلغ", "العملة"]),
-...             "المصروفات": pd.DataFrame(columns=["التاريخ", "المورد", "المبلغ", "العملة"]),
-...             "المخزون": pd.DataFrame(columns=["الصنف", "الكمية", "سعر الوحدة", "حد إعادة الطلب"])
-...         }
-...         
-...         # تبويبات
-...         self.tab_control = ttk.Notebook(root)
-...         
-...         self.entry_tab = ttk.Frame(self.tab_control)
-...         self.report_tab = ttk.Frame(self.tab_control)
-...         self.audit_tab = ttk.Frame(self.tab_control)
-...         self.settings_tab = ttk.Frame(self.tab_control)
-...         
-...         self.tab_control.add(self.entry_tab, text="إدخال البيانات")
-...         self.tab_control.add(self.report_tab, text="التقارير")
-...         self.tab_control.add(self.audit_tab, text="الرقابة")
-...         self.tab_control.add(self.settings_tab, text="الإعدادات")
-...         
-...         self.tab_control.pack(expand=1, fill="both")
-...         
-        # واجهة إدخال البيانات
-        self.create_entry_tab()
-        
-        # واجهة التقارير
-        self.create_report_tab()
-        
-        # واجهة الرقابة
-        self.create_audit_tab()
-        
-        # واجهة الإعدادات
-        self.create_settings_tab()
+st.set_page_config(
+    page_title="النظام المحاسبي الذكي",
+    layout="wide",
+    page_icon="💰"
+)
 
-    def create_entry_tab(self):
-        """واجهة إدخال البيانات"""
-        ttk.Label(self.entry_tab, text="اختر نوع العملية:").grid(row=0, column=0, padx=5, pady=5)
-        self.operation_type = ttk.Combobox(self.entry_tab, values=["المبيعات", "المصروفات", "المخزون"])
-        self.operation_type.grid(row=0, column=1, padx=5, pady=5)
-        
-        ttk.Label(self.entry_tab, text="البيانات:").grid(row=1, column=0, padx=5, pady=5)
-        self.data_entry = tk.Text(self.entry_tab, height=5, width=50)
-        self.data_entry.grid(row=1, column=1, padx=5, pady=5)
-        
-        ttk.Button(self.entry_tab, text="إضافة", command=self.add_entry).grid(row=2, column=1, pady=10)
-    
-    def create_report_tab(self):
-        """واجهة التقارير"""
-        ttk.Label(self.report_tab, text="اختر نوع التقرير:").pack(pady=5)
-        self.report_type = ttk.Combobox(self.report_tab, values=["المبيعات", "المصروفات", "المخزون"])
-        self.report_type.pack(pady=5)
-        
-        ttk.Button(self.report_tab, text="عرض التقرير", command=self.generate_report).pack(pady=5)
-        
-        self.report_tree = ttk.Treeview(self.report_tab)
-        self.report_tree.pack(expand=1, fill="both")
-    
-    def create_audit_tab(self):
-        """واجهة الرقابة"""
-        ttk.Button(self.audit_tab, text="تشغيل الفحص الرقابي", command=self.audit_data).pack(pady=10)
-        self.audit_output = tk.Text(self.audit_tab, height=20, width=100)
-        self.audit_output.pack(pady=10)
-    
-    def create_settings_tab(self):
-        """واجهة الإعدادات"""
-        ttk.Button(self.settings_tab, text="تحديث أسعار العملات", command=self.update_external_data).pack(pady=10)
-        ttk.Button(self.settings_tab, text="تصدير إلى Excel", command=self.export_to_excel).pack(pady=10)
+# -------------------------
+# واجهة التطبيق الرئيسية
+# -------------------------
+st.title("💼 النظام المحاسبي الذكي")
+st.markdown(
+    "مرحبًا بك في النظام المحاسبي الذكي. يمكنك إدارة الفواتير، المخزون، والقيود المالية بسهولة."
+)
 
-    def add_entry(self):
-        """إضافة قيد جديد"""
-        entry_type = self.operation_type.get()
-        raw_data = self.data_entry.get("1.0", tk.END).strip()
-        
-        if not entry_type or not raw_data:
-            messagebox.showerror("خطأ", "الرجاء إدخال جميع البيانات")
-            return
-        
-        try:
-            if entry_type == "المبيعات":
-                date, client, amount, currency = raw_data.split(",")
-                new_row = {"التاريخ": date.strip(), "العميل": client.strip(), "المبلغ": float(amount), "العملة": currency.strip()}
-            elif entry_type == "المصروفات":
-                date, supplier, amount, currency = raw_data.split(",")
-                new_row = {"التاريخ": date.strip(), "المورد": supplier.strip(), "المبلغ": float(amount), "العملة": currency.strip()}
-            else:  # المخزون
-                item, qty, price, reorder = raw_data.split(",")
-                new_row = {"الصنف": item.strip(), "الكمية": int(qty), "سعر الوحدة": float(price), "حد إعادة الطلب": int(reorder)}
-            
-            self.data[entry_type] = pd.concat([self.data[entry_type], pd.DataFrame([new_row])], ignore_index=True)
-            messagebox.showinfo("تم", "تمت إضافة البيانات بنجاح")
-            self.data_entry.delete("1.0", tk.END)
-        
-        except Exception as e:
-            messagebox.showerror("خطأ", f"صيغة البيانات غير صحيحة\n{e}")
+# -----------------------------------
+# قاعدة بيانات مؤقتة (للاستخدام الأولي)
+# -----------------------------------
+people_db = []
+inventory = []
+journal_entries = []
 
-    def generate_report(self):
-        """إنشاء تقرير"""
-        report_type = self.report_type.get()
-        for item in self.report_tree.get_children():
-            self.report_tree.delete(item)
-        
-        if not self.data[report_type].empty:
-            self.report_tree["columns"] = list(self.data[report_type].columns)
-            self.report_tree["show"] = "headings"
-            for col in self.data[report_type].columns:
-                self.report_tree.heading(col, text=col)
-            for _, row in self.data[report_type].iterrows():
-                values = tuple(row.get(col, "") for col in self.report_tree["columns"])
-                self.report_tree.insert("", tk.END, values=values)
+# -------------------------
+# تبويبات التطبيق
+# -------------------------
+tabs = st.tabs(["🏢 الأشخاص/المؤسسات", "📦 المخزون", "📝 القيد المحاسبي", "📊 التقارير"])
 
-    def audit_data(self):
-        """التدقيق المحاسبي"""
-        self.audit_output.delete("1.0", tk.END)
-        issues = []
-        
-        for dtype, df in self.data.items():
-            if dtype in ["المبيعات", "المصروفات"] and not df.empty:
-                for i, row in df.iterrows():
-                    if row["المبلغ"] <= 0:
-                        issues.append(f"⚠ {dtype}: قيمة غير منطقية في الصف {i+1} - المبلغ = {row['المبلغ']}")
-            if dtype == "المخزون" and not df.empty:
-                for i, row in df.iterrows():
-                    if row["الكمية"] <= row["حد إعادة الطلب"]:
-                        issues.append(f"⚠ المخزون: الصنف {row['الصنف']} وصل حد إعادة الطلب")
-        
-        if issues:
-            self.audit_output.insert(tk.END, "\n".join(issues))
-        else:
-            self.audit_output.insert(tk.END, "✅ لا توجد أخطاء محاسبية")
+# -------------------------
+# 1️⃣ إدارة الأشخاص والمؤسسات
+# -------------------------
+with tabs[0]:
+    st.header("🏢 إدارة الأشخاص والمؤسسات")
+    with st.form("person_form"):
+        name = st.text_input("الاسم")
+        role = st.text_input("الصفة / الدور")
+        phone = st.text_input("رقم الهاتف")
+        email = st.text_input("البريد الإلكتروني")
+        submit_person = st.form_submit_button("إضافة شخص/مؤسسة")
+        if submit_person:
+            person = {
+                "الاسم": name,
+                "الصفة": role,
+                "الهاتف": phone,
+                "البريد": email
+            }
+            people_db.append(person)
+            st.success(f"تم إضافة: {name}")
 
-    def update_external_data(self):
-        """تحديث أسعار العملات (محاكاة)"""
-        messagebox.showinfo("تحديث", "تم تحديث أسعار العملات من المصدر الخارجي (محاكاة)")
+    if people_db:
+        st.subheader("قائمة الأشخاص/المؤسسات")
+        df_people = pd.DataFrame(people_db)
+        st.dataframe(df_people, use_container_width=True)
 
-    def export_to_excel(self):
-        """تصدير البيانات إلى ملف Excel"""
-        file_path = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel Files", "*.xlsx")])
-        if not file_path:
-            return
-        with pd.ExcelWriter(file_path, engine="openpyxl") as writer:
-            for dtype, df in self.data.items():
-                df.to_excel(writer, sheet_name=dtype, index=False)
-        messagebox.showinfo("تم", f"تم تصدير البيانات إلى {file_path}")
+# -------------------------
+# 2️⃣ إدارة الأصناف والمخزون
+# -------------------------
+with tabs[1]:
+    st.header("📦 إدارة الأصناف والمخزون")
+    with st.form("inventory_form"):
+        item_name = st.text_input("اسم الصنف")
+        item_type = st.text_input("نوع الصنف")
+        item_price = st.number_input("سعر الوحدة", min_value=0.0, format="%.2f")
+        item_quantity = st.number_input("الكمية المتوفرة", min_value=0, step=1)
+        reorder_point = st.number_input("نقطة إعادة الطلب", min_value=0, step=1)
+        submit_item = st.form_submit_button("إضافة صنف")
+        if submit_item:
+            item = {
+                "الاسم": item_name,
+                "النوع": item_type,
+                "السعر": item_price,
+                "الكمية": item_quantity,
+                "نقطة إعادة الطلب": reorder_point
+            }
+            inventory.append(item)
+            st.success(f"تم إضافة الصنف: {item_name}")
 
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = SmartAccountingSystem(root)
-    root.mainloop()
+    if inventory:
+        st.subheader("المخزون الحالي")
+        df_inventory = pd.DataFrame(inventory)
+        # تمييز المخزون المنخفض
+        def highlight_reorder(row):
+            return ['background-color: #ffcccc' if row["الكمية"] <= row["نقطة إعادة الطلب"] else '' for _ in row]
+
+        st.dataframe(df_inventory.style.apply(highlight_reorder, axis=1), use_container_width=True)
+
+# -------------------------
+# 3️⃣ إدخال القيد المحاسبي
+# -------------------------
+with tabs[2]:
+    st.header("📝 إدخال قيد محاسبي")
+    with st.form("journal_form"):
+        entry_date = st.date_input("التاريخ", date.today())
+        entry_description = st.text_input("الوصف")
+        entry_amount = st.number_input("المبلغ", min_value=0.0, format="%.2f")
+        entry_account = st.selectbox("الحساب", ["النقدية", "البنك", "المبيعات", "المشتريات"])
+        submit_journal = st.form_submit_button("إضافة القيد")
+        if submit_journal:
+            entry = {
+                "التاريخ": entry_date,
+                "الوصف": entry_description,
+                "المبلغ": entry_amount,
+                "الحساب": entry_account
+            }
+            journal_entries.append(entry)
+            st.success(f"تم إضافة القيد: {entry_description} بمبلغ {entry_amount}")
+
+    if journal_entries:
+        st.subheader("القيود المحاسبية")
+        df_journal = pd.DataFrame(journal_entries)
+        st.dataframe(df_journal, use_container_width=True)
+
+# -------------------------
+# 4️⃣ التقارير المالية
+# -------------------------
+with tabs[3]:
+    st.header("📊 التقارير المالية")
+    if journal_entries:
+        st.subheader("ملخص الحسابات")
+        df_journal = pd.DataFrame(journal_entries)
+        accounts_summary = df_journal.groupby("الحساب")["المبلغ"].sum().reset_index()
+        st.dataframe(accounts_summary, use_container_width=True)
+    else:
+        st.info("لا توجد قيود محاسبية لعرض التقرير.")
+
 
