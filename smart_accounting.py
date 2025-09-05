@@ -45,8 +45,8 @@ with tabs[0]:
                 "الاسم": name,
                 "الصفة": role,
                 "الهاتف": phone,
-                "البريد": email
-                "العنوان":hi
+                "البريد": email,
+                "العنوان":hi,
             }
             people_db.append(person)
             st.success(f"تم إضافة: {name}")
@@ -126,6 +126,7 @@ with tabs[3]:
         st.dataframe(accounts_summary, use_container_width=True)
     else:
         st.info("لا توجد قيود محاسبية لعرض التقرير.")
+
 
 
 
