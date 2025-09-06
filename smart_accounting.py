@@ -39,6 +39,8 @@ with tabs[0]:
         role = st.text_input("الصفة / الدور")
         phone = st.text_input("رقم الهاتف")
         email = st.text_input("البريد الإلكتروني")
+        hi = st.text_input("العنوان")
+        
         submit_person = st.form_submit_button("إضافة شخص/مؤسسة")
         if submit_person:
             person = {
@@ -126,6 +128,7 @@ with tabs[3]:
         st.dataframe(accounts_summary, use_container_width=True)
     else:
         st.info("لا توجد قيود محاسبية لعرض التقرير.")
+
 
 
 
